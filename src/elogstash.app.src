@@ -1,0 +1,14 @@
+{application, elogstash, [
+    {description, "Logstash library to send information using UDP or TCP avoiding bottlenecks"},
+    {vsn, git},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
+        poolboy,
+        jsx
+    ]},
+    {env,[]},
+    {modules, []},
+    {mod, {elogstash_app, []}}
+]}.
