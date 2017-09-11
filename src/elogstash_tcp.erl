@@ -28,14 +28,20 @@
     port :: inet:port_number()
 }).
 
+-define(DEFAULT_TYPE, <<"erlang_logstash">>).
+
 
 -spec send(pid(), Info :: [proplists:property()]) -> ok.
 %% @doc send information to logstash.
-send(PID, Info) ->
+send(PID, Info) when is_list(Info) ->
+    Type = application:get_env(elogstash, type, ?DEFAULT_TYPE),
     Fix = [{<<"@timestamp">>, timestamp()},
-           {<<"type">>, <<"intercept">>}],
-    gen_server:cast(PID, [Fix|Info]),
-    ok.
+           {<<"type">>, Type}],
+    gen_server:cast(PID, Fix ++ Info),
+    ok;
+
+send(PID, Info) when is_map(Info) ->
+    send(PID, maps:to_list(Info)).
 
 
 -spec start_link({inet:socket_address(), inet:port_number()}) -> {ok, pid()}.
@@ -47,7 +53,7 @@ start_link({Host, Port}) ->
 -spec init({inet:socket_address(), inet:port_number()}) -> {ok, pid()}.
 %% @doc initialize the process to send information data to logstash.
 init({Host, Port}) ->
-    Opts = [binary, {packet, 0}, {active, false}],
+    Opts = [binary, {packet, 0}, {active, once}],
     {ok, Socket} = gen_tcp:connect(Host, Port, Opts),
     {ok, #state{
         socket = Socket,
@@ -76,7 +82,7 @@ handle_call(_Request, _From, State) ->
 %% @doc handle asynchronous information sent via gen_server:cast/2 function.
 handle_cast(Request, #state{socket = Socket} = State) ->
     JSON = jsx:encode(Request),
-    ok = gen_tcp:send(Socket, JSON),
+    ok = gen_tcp:send(Socket, <<JSON/binary, "\n">>),
     {noreply, State}.
 
 
