@@ -1,10 +1,10 @@
-%% @doc Creates a server to handle a client connection to a TCP logstash
+%% @doc Creates a server to handle a client connection to a UDP logstash
 %%      server.
 %%      The module is responsible of creating the connection, send the
 %%      information to the logstash server and format that information
 %%      correctly in a JSON format.
 %% @end
--module(elogstash_tcp).
+-module(elogstash_udp).
 -author("Manuel Rubio <manuel@altenwald.com>").
 -compile([warnings_as_errors]).
 
@@ -22,7 +22,7 @@
 ]).
 
 -record(state, {
-    socket :: gen_tcp:socket(),
+    socket :: gen_udp:socket(),
     host :: inet:socket_address(),
     port :: inet:port_number()
 }).
@@ -37,8 +37,8 @@ start_link({Host, Port}) ->
 -spec init({inet:socket_address(), inet:port_number()}) -> {ok, #state{}}.
 %% @doc initialize the process to send information data to logstash.
 init({Host, Port}) ->
-    Opts = [binary, {packet, 0}, {active, once}],
-    {ok, Socket} = gen_tcp:connect(Host, Port, Opts),
+    Opts = [binary, {active, once}],
+    {ok, Socket} = gen_udp:open(0, Opts),
     {ok, #state{
         socket = Socket,
         host = Host,
@@ -64,10 +64,11 @@ handle_call(_Request, _From, State) ->
     {noreply, NewState :: term(), timeout() | hibernate} |
     {stop, Reason :: term(), NewState :: term()}.
 %% @doc handle asynchronous information sent via gen_server:cast/2 function.
-handle_cast(Request, #state{socket = Socket} = State) when is_list(Request)
-                                                    orelse is_map(Request) ->
+handle_cast(Request, #state{socket = Socket, host = Host,
+                            port = Port} = State) when is_list(Request)
+                                                orelse is_map(Request) ->
     JSON = elogstash_json:prepare(Request),
-    ok = gen_tcp:send(Socket, JSON),
+    ok = gen_udp:send(Socket, Host, Port, JSON),
     {noreply, State}.
 
 
@@ -76,12 +77,10 @@ handle_cast(Request, #state{socket = Socket} = State) when is_list(Request)
     {noreply, NewState :: term(), timeout() | hibernate} |
     {stop, Reason :: term(), NewState :: term()}.
 %% @doc handle raw messages arrived to the process using erlang:send/2 or '!'.
-handle_info({tcp, Socket, _Data}, #state{socket = Socket} = State) ->
+handle_info({udp, Socket, _IP, _InPortNo, _Packet},
+            #state{socket = Socket} = State) ->
     %% we shouldn't receive anything via Socket
-    {stop, normal, State};
-
-handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
-    {stop, normal, State#state{socket = undefined}}.
+    {stop, normal, State}.
 
 
 -spec terminate(Reason :: (normal | shutdown | {shutdown, term()} |
@@ -90,12 +89,9 @@ handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
 %% @doc called when the process finished in a controlled way (using stop in the
 %%      previous callbacks).
 %% @end
-terminate(_Reason, #state{socket = undefined}) ->
-    error_logger:error_msg("closed socket", []),
-    ok;
 terminate(_Reason, #state{socket = Socket}) ->
     error_logger:error_msg("closing socket: ~p", [Socket]),
-    ok = gen_tcp:close(Socket).
+    ok = gen_udp:close(Socket).
 
 
 -spec code_change(OldVsn :: (term() | {down, term()}), State :: term(),

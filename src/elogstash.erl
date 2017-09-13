@@ -8,7 +8,8 @@
 
 -export([
     start/0,
-    send/1
+    send/1,
+    send/2
 ]).
 
 
@@ -21,6 +22,12 @@ start() ->
 -spec send(Info :: [proplists:property()]) -> ok.
 %% @doc send information to logstash using a poolboy transaction.
 send(Info) ->
-    poolboy:transaction(elogstash_tcp, fun(PID) ->
-        ok = elogstash_tcp:send(PID, Info)
+    poolboy:transaction(elogstash_pool, fun(PID) ->
+        ok = elogstash:send(PID, Info)
     end).
+
+
+-spec send(pid(), Info :: [proplists:property()] | map()) -> ok.
+%% @doc send information to logstash.
+send(PID, Info) ->
+    ok = gen_server:cast(PID, Info).
