@@ -10,5 +10,9 @@
     ]},
     {env,[]},
     {modules, []},
-    {mod, {elogstash_app, []}}
+    {mod, {elogstash_app, []}},
+
+    {maintainers, ["Manuel Rubio"]},
+    {licenses, ["LGPL"]},
+    {links, [{"Github", "https://github.com/manuel-rubio/elogstash"}]}
 ]}.
