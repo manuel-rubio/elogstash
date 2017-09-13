@@ -26,6 +26,13 @@ init([]) ->
         child_spec(Size, Transport, Data)
     ]}}.
 
+child_spec(_Size, file, Conn) ->
+    Name = ?POOLNAME,
+    poolboy:child_spec(Name, [{name, {local, Name}},
+                              {worker_module, elogstash_file},
+                              {size, 1},
+                              {max_overflow, 1}], Conn);
+
 child_spec(Size, tcp, Conn) ->
     Name = ?POOLNAME,
     Overflow = max(Size div 2, 1),
