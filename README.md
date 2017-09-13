@@ -52,12 +52,14 @@ Using the configuration file (sys.config or app.config):
 
 ```erlang
 {elogstash, [
-    {connection, {"localhost", 5000}},
+    {connection, {tcp, {"localhost", 5000}}},
     {max_worker, 10}
 ]},
 ```
 
 The connection could be done using a string for the name (like in the example: `"localhost"`) or using an IP address in the way Erlang implement them (i.e. `{127,0,0,1}`).
+
+The transports available at this moment are `tcp` or `udp`.
 
 The `max_workers` is the max number of workers the pool will create. The minimum is the half so, if you configure 10 workers, the start number of connections will be 5.
 
