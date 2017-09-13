@@ -59,9 +59,11 @@ Using the configuration file (sys.config or app.config):
 
 The connection could be done using a string for the name (like in the example: `"localhost"`) or using an IP address in the way Erlang implement them (i.e. `{127,0,0,1}`).
 
-The transports available at this moment are `tcp` or `udp`.
+The transports available at this moment are `tcp`, `udp` or `file`.
 
-The `max_workers` is the max number of workers the pool will create. The minimum is the half so, if you configure 10 workers, the start number of connections will be 5.
+In case of `file` you have to configure the basename of the file instead of the host and the kind of rotation you want: `hourly`, `daily` or `monthly`. The file could contains a path and it could be absolute or relative path but I recommend to use absolute path always.
+
+The `max_workers` is the max number of workers the pool will create. The minimum is the half so, if you configure 10 workers, the start number of connections will be 5. The `file` backend force to use only 1 max worker.
 
 The configuration could be done in the code configuring `elogstash` as a dependency but only to load and then:
 
