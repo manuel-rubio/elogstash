@@ -4,6 +4,7 @@ elogstash
 [![Build Status](https://img.shields.io/travis/manuel-rubio/elogstash/master.svg)](https://travis-ci.org/manuel-rubio/elogstash)
 [![Codecov](https://img.shields.io/codecov/c/github/manuel-rubio/elogstash.svg)](https://codecov.io/gh/manuel-rubio/elogstash)
 [![License: LGPL 2.1](https://img.shields.io/github/license/manuel-rubio/elogstash.svg)](https://raw.githubusercontent.com/manuel-rubio/elogstash/master/LICENSE)
+[![Hex](https://img.shields.io/hexpm/v/elogstash.svg)](https://hex.pm/packages/elogstash)
 
 Logstash library to send information using UDP or TCP avoiding bottlenecks
 
