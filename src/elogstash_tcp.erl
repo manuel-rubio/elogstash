@@ -88,6 +88,9 @@ handle_info({tcp, Socket, _Data}, #state{socket = Socket} = State) ->
     %% we shouldn't receive anything via Socket
     {stop, normal, State};
 
+handle_info({tcp_error, _Port, Reason}, State) ->
+    {stop, {tcp_error, Reason}, State#state{socket = undefined}};
+
 handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
     {stop, normal, State#state{socket = undefined}}.
 
