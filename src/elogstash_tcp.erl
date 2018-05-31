@@ -37,10 +37,8 @@ start_link({Host, Port}) ->
 -spec init({inet:socket_address(), inet:port_number()}) -> {ok, #state{}}.
 %% @doc initialize the process to send information data to logstash.
 init({Host, Port}) ->
-    Opts = [binary, {packet, 0}, {active, once}],
-    {ok, Socket} = gen_tcp:connect(Host, Port, Opts),
+    self() ! connect,
     {ok, #state{
-        socket = Socket,
         host = Host,
         port = Port
     }}.
@@ -75,6 +73,16 @@ handle_cast(Request, #state{socket = Socket} = State) when is_list(Request)
     {noreply, NewState :: term()} |
     {noreply, NewState :: term(), timeout() | hibernate} |
     {stop, Reason :: term(), NewState :: term()}.
+handle_info(connect, State = #state{socket = undefined,
+                                    host = Host, port = Port}) ->
+    Opts = [binary, {packet, 0}, {active, once}],
+    case gen_tcp:connect(Host, Port, Opts) of
+        {ok, Socket} ->
+            {noreply, State#state{socket = Socket}};
+        {error, Reason} ->
+            {stop, {connect_error, Reason}, State}
+    end;
+
 %% @doc handle raw messages arrived to the process using erlang:send/2 or '!'.
 handle_info({tcp, Socket, _Data}, #state{socket = Socket} = State) ->
     %% we shouldn't receive anything via Socket
