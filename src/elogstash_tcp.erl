@@ -88,8 +88,13 @@ handle_info({tcp, Socket, _Data}, #state{socket = Socket} = State) ->
     %% we shouldn't receive anything via Socket
     {stop, normal, State};
 
+handle_info({tcp_error, _Port, Reason = etimedout}, State) ->
+    error_logger:warning_msg("Connection failed due to ~w.", [Reason]),
+    {stop, normal, State};
+
 handle_info({tcp_error, _Port, Reason}, State) ->
-    {stop, {tcp_error, Reason}, State#state{socket = undefined}};
+    error_logger:error_msg("Connection failed due to ~w.", [Reason]),
+    {stop, normal, State};
 
 handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
     {stop, normal, State#state{socket = undefined}}.
@@ -102,10 +107,8 @@ handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
 %%      previous callbacks).
 %% @end
 terminate(_Reason, #state{socket = undefined}) ->
-    error_logger:error_msg("closed socket", []),
     ok;
 terminate(_Reason, #state{socket = Socket}) ->
-    error_logger:error_msg("closing socket: ~p", [Socket]),
     ok = gen_tcp:close(Socket).
 
 
