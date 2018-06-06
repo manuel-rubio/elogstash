@@ -89,11 +89,13 @@ handle_info({tcp, Socket, _Data}, #state{socket = Socket} = State) ->
     {stop, normal, State};
 
 handle_info({tcp_error, _Port, Reason = etimedout}, State) ->
-    error_logger:warning_msg("Connection failed due to ~w.", [Reason]),
+    error_logger:warning_msg("~w: Connection failed due to ~w.",
+                             [?MODULE, Reason]),
     {stop, normal, State};
 
 handle_info({tcp_error, _Port, Reason}, State) ->
-    error_logger:error_msg("Connection failed due to ~w.", [Reason]),
+    error_logger:error_msg("~w: Connection failed due to ~w.",
+                           [?MODULE, Reason]),
     {stop, normal, State};
 
 handle_info({tcp_closed, Socket}, #state{socket = Socket} = State) ->
