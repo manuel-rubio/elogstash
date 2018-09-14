@@ -47,4 +47,12 @@ child_spec(Size, udp, Conn) ->
     poolboy:child_spec(Name, [{name, {local, Name}},
                               {worker_module, elogstash_udp},
                               {size, Size},
+                              {max_overflow, Overflow}], Conn);
+
+child_spec(Size, http, Conn) ->
+    Name = ?POOLNAME,
+    Overflow = max(Size div 2, 1),
+    poolboy:child_spec(Name, [{name, {local, Name}},
+                              {worker_module, elogstash_http},
+                              {size, Size},
                               {max_overflow, Overflow}], Conn).
